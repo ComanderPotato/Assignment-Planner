@@ -1,0 +1,4 @@
+﻿﻿.calendar {
+    display: grid;
+    grid-template-rows: max-content max-content auto;
+}

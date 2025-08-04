@@ -1,0 +1,39 @@
+﻿@inject ApplicationState ApplicationState
+<div class="calendar-topbar">
+    <div class="calendar-title">
+        <span class="month">@ApplicationState.Month</span>
+        <span class="year">@ApplicationState.Year</span>
+    </div>
+    <div class="calendar-controls">
+        <CustomButton Type="button" Class="calendar-control--button" OnClick="HandlePreviousMonthOnClick">
+            &lt;
+        </CustomButton>
+        <CustomButton Type="button" Class="calendar-control--button" OnClick="HandleCurrentMonthOnClick">
+            Today
+        </CustomButton>
+        <CustomButton Type="button" Class="calendar-control--button" OnClick="HandleNextMonthOnClick">
+            &gt;
+        </CustomButton>
+    </div>
+</div>
+@code {
+    private void UpdateState()
+    {
+        StateHasChanged();
+    }
+    private void HandlePreviousMonthOnClick()
+    {
+        ApplicationState.DecrementDate();
+        UpdateState();
+    }
+    private void HandleCurrentMonthOnClick()
+    {
+        ApplicationState.DummyDate = ApplicationState.CurrentDate;
+        UpdateState();
+    }
+    private void HandleNextMonthOnClick()
+    {
+        ApplicationState.IncrementDate();
+        UpdateState();
+    }
+}

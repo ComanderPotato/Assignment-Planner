@@ -1,0 +1,19 @@
+﻿﻿.header {
+    background-color: var(--deep-blue);
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    color: var(--neutral-silver);
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    font-size: 2rem;
+}

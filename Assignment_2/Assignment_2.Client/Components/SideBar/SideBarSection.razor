@@ -1,0 +1,47 @@
+﻿<div class="sidebar-section">
+    <div class="sidebar-section--header">
+        <h2>@Header</h2>
+    </div>
+    <div class="sidebar-section--items">
+        @if (TaskItems != null)
+        {
+
+            @foreach (TaskItem taskItem in TaskItems)
+            {
+                <SideBarSectionItem ItemTitles="[taskItem.SubjectName, taskItem.TaskItemTitle, taskItem.Date.Date.ToString()]" />
+            }
+        }
+        else if (SubjectItems != null)
+        {
+            @foreach (var subject in SubjectItems)
+            {
+                <SideBarSectionItem ItemTitles="[subject.Key, CalculateAchievedPercentage(subject.Value), CalculateSubjectTotalPercentage(subject.Value)]" />
+            }
+        }
+    </div>
+</div>
+@code {
+    [Parameter]
+    public required string Header { get; set; }
+    [Parameter]
+    public List<TaskItem>? TaskItems { get; set; }
+    [Parameter]
+    public Dictionary<string, List<TaskItem>>? SubjectItems { get; set; }
+
+    private string CalculateAchievedPercentage(List<TaskItem> taskItems)
+    {
+        string sum = taskItems.Sum(taskItem =>
+        {
+            if (taskItem is Assignment assignment && assignment.TotalMark != 0)
+            {
+                return (assignment.AchievedMark / assignment.TotalMark * assignment.Percentage);
+            }
+            return 0.0f;
+        }).ToString();
+        return sum;
+    }
+    private string CalculateSubjectTotalPercentage(List<TaskItem> taskItems)
+    {
+        return taskItems.Sum(taskItem => taskItem is Assignment assignment ? assignment.Percentage : 0.0f).ToString();
+    }
+}

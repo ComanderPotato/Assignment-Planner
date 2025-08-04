@@ -1,0 +1,24 @@
+﻿.sidebar-section--item {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align: center;
+    padding: 1rem 1.4rem;
+    border-radius: 0.4rem;
+    background-color: var(--neutral-deep-blue);
+}
+.sidebar-section--item > span {
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+}
+.grid-col--2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+.grid-col--3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+.grid-col--4 {
+    grid-template-columns: repeat(4, 1fr);
+}

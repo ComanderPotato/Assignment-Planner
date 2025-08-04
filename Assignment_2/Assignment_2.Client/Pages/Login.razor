@@ -1,0 +1,83 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@inject ApplicationState ApplicationState
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject ITaskItemService TaskItemService
+<EditForm EditContext="loginUserContext" OnSubmit="HandleValidSubmit" FormName="loginUser" class="login-container form-container">
+    <DataAnnotationsValidator />
+    <div class="form-header">
+        <h1>Login</h1>
+    </div>
+    <div class="form-body">
+        <div class="form-input--group">
+            <label class="form-label" for="">Email</label>
+            <InputText class="form-input" id="email" @bind-Value="user.Email">@user.Email</InputText>
+            <ValidationMessage For="@(() => user.Email)" />
+
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="">Password</label>
+            <InputText class="form-input" id="password" type="password" @bind-Value="user.Password">@user.Password</InputText>
+            <ValidationMessage For="@(() => user.Password)" />
+
+        </div>
+        @if (!string.IsNullOrEmpty(loginError))
+        {
+            <div>
+                <div class="validation-message">@loginError</div>
+            </div>
+        }
+        <div class="form-btns">
+            <CustomButton Type="submit" Class="form-btn CTA-btn">
+                Login
+            </CustomButton>
+
+            <NavLink class="form-btn secondary-btn" href="/register">Sign Up</NavLink>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    User user = new User { FirstName = "Dummy", Surname = "Dummy" };
+    private EditContext? loginUserContext;
+    private string loginError = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        loginUserContext = new EditContext(user);
+    }
+    private async void HandleValidSubmit()
+    {
+        TrimUserInputs();
+        if (loginUserContext!.Validate())
+        {
+            try
+            {
+                ApplicationState.CurrentUser = await UserService.GetByCredentials(user);
+
+                if (ApplicationState.CurrentUser != null)
+                {
+                    loginError = string.Empty;
+                    NavigationManager.NavigateTo("/dashboard");
+                }
+                else
+                {
+                    loginError = "User with credentials doesn't exist";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                loginError = "An error occurred while logging in. Please try again later.";
+            }
+        }
+    }
+    private void TrimUserInputs()
+    {
+        user.FirstName = user.FirstName.Trim();
+        user.Surname = user.Surname.Trim();
+        user.Email = user.Email.Trim().ToLower();
+        user.Password = user.Password.Trim();
+    }
+}

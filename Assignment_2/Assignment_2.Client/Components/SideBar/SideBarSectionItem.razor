@@ -1,0 +1,10 @@
+﻿<div class="sidebar-section--item grid-col--@(ItemTitles.Count)">
+    @foreach(string itemTitle in ItemTitles)
+    {
+        <span>@itemTitle</span>
+    }
+</div>
+@code {
+    [Parameter]
+    public required List<string> ItemTitles { get; set; }
+}

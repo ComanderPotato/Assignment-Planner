@@ -1,0 +1,116 @@
+﻿@page "/register"
+@inject IUserService UserService
+@inject ApplicationState ApplicationState
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<EditForm EditContext="registerUserContext" OnSubmit="HandleValidSubmit" FormName="registerUser" class="signup-container form-container">
+    <DataAnnotationsValidator />
+    <div class="form-header">
+        <h1>Create an account!</h1>
+    </div>
+    <div class="form-body">
+        <div class="form-input--group">
+            <label class="form-label" for="">First Name</label>
+            <InputText id="firstName" class="form-input" @bind-Value="newUser.FirstName">@newUser.FirstName</InputText>
+            <ValidationMessage For="@(() => newUser.FirstName)" />
+
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="">Surname</label>
+            <InputText id="surname" class="form-input" @bind-Value="newUser.Surname">@newUser.Surname</InputText>
+            <ValidationMessage For="@(() => newUser.Surname)" />
+
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="">Email</label>
+            <InputText id="email" class="form-input" @bind-Value="newUser.Email">@newUser.Email</InputText>
+            @if (!string.IsNullOrEmpty(emailExistsError))
+            {
+                <div class="validation-message">@emailExistsError</div>
+            }
+            else
+            {
+                <ValidationMessage For="@(() => newUser.Email)" />
+            }
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="">Password</label>
+            <InputText id="password" class="form-input" type="password" @bind-Value="newUser.Password">@newUser.Password</InputText>
+            <ValidationMessage For="@(() => newUser.Password)" />
+
+        </div>
+        @if (!string.IsNullOrEmpty(registerError))
+        {
+            <div>
+                <div class="validation-message">@registerError</div>
+            </div>
+        }
+        <div class="form-btns">
+            <NavLink class="form-btn secondary-btn" href="/login">Login</NavLink>
+            <CustomButton Type="submit" Class="form-btn CTA-btn">
+                Sign Up
+            </CustomButton>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    User newUser = new User();
+    private string emailExistsError = string.Empty;
+    private string registerError = string.Empty;
+    private EditContext? registerUserContext;
+
+    protected override void OnInitialized()
+    {
+        registerUserContext = new EditContext(newUser);
+    }
+    private async Task HandleValidSubmit()
+    {
+        TrimUserInputs();
+        if (registerUserContext!.Validate())
+        {
+            try
+            {
+                if (!await UserService.UserWithEmailExists(newUser.Email))
+                {
+                    ApplicationState.CurrentUser = await UserService.AddUser(newUser);
+
+                    if (ApplicationState.CurrentUser != null)
+                    {
+                        NavigationManager.NavigateTo("/dashboard");
+                    }
+                    else
+                    {
+                        newUser = new User
+                            {
+                                FirstName = string.Empty,
+                                Surname = string.Empty,
+                                Email = string.Empty,
+                                Password = string.Empty
+                            };
+                    }
+
+                    emailExistsError = string.Empty;
+                    NavigationManager.NavigateTo("/dashboard");
+                }
+                else
+                {
+                    emailExistsError = "An account with this email already exists!";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred during registration: {ex.Message}");
+                registerError = "An error occurred while trying to register. Please try again later.";
+            }
+        }
+    }
+    private void TrimUserInputs()
+    {
+        newUser.FirstName = newUser.FirstName.Trim();
+        newUser.Surname = newUser.Surname.Trim();
+        newUser.Email = newUser.Email.Trim().ToLower();
+        newUser.Password = newUser.Password.Trim();
+    }
+}

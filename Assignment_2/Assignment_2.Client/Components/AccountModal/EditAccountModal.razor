@@ -1,0 +1,115 @@
+﻿@inject ApplicationState ApplicationState;
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+<EditForm EditContext="updatedUserContext" OnSubmit="HandleEditUserInformation" class="form-body">
+    <DataAnnotationsValidator />
+    <div class="form-input--group">
+        <label class="form-label" for="">First Name</label>
+        <InputText id="updatedFirstName"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryUser.FirstName" />
+        <ValidationMessage For="@(() => temporaryUser.FirstName)" />
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="">Surname</label>
+
+        <InputText id="updatedSurname"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryUser.Surname" />
+        <ValidationMessage For="@(() => temporaryUser.Surname)" />
+
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="">Email</label>
+
+        <InputText id="updatedEmail"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryUser.Email" />
+        <ValidationMessage For="@(() => temporaryUser.Email)" />
+
+
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="">Password</label>
+
+        <InputText id="updatedPassword"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryUser.Password" />
+        <ValidationMessage For="@(() => temporaryUser.Password)" />
+    </div>
+    <div>
+        <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="HandleLogout">
+            Logout
+        </CustomButton>
+    </div>
+
+    <div class="form-btns">
+        <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="() => HandleModalStateChange(ModalState.ViewAccount)">
+            Cancel
+        </CustomButton>
+        <CustomButton Type="submit" Class="form-btn CTA-btn">
+            Save
+        </CustomButton>
+    </div>
+</EditForm>
+@code {
+    [Parameter]
+    public EventCallback<ModalState> OnModalStateChange { get; set; }
+    [Parameter]
+    public EventCallback OnLogout { get; set; }
+
+    User temporaryUser = new User();
+    private EditContext? updatedUserContext;
+
+    protected override void OnInitialized()
+    {
+        InitializeModal();
+        updatedUserContext = new EditContext(temporaryUser);
+    }
+    private void InitializeModal()
+    {
+        if (ApplicationState.CurrentUser == null) return;
+        temporaryUser = new User
+            {
+                Id = ApplicationState.CurrentUser.Id,
+                FirstName = ApplicationState.CurrentUser.FirstName,
+                Surname = ApplicationState.CurrentUser.Surname,
+                Email = ApplicationState.CurrentUser.Email,
+                Password = ApplicationState.CurrentUser.Password
+            };
+    }
+    private async void HandleEditUserInformation()
+    {
+        TrimUserInputs();
+        if (updatedUserContext!.Validate())
+        {
+            await UserService.UpdateUser(temporaryUser);
+            ApplicationState.CurrentUser = temporaryUser;
+            InitializeModal();
+            HandleModalStateChange(ModalState.ViewAccount);
+        }
+    }
+    private void TrimUserInputs()
+    {
+        temporaryUser.FirstName = temporaryUser.FirstName.Trim();
+        temporaryUser.Surname = temporaryUser.Surname.Trim();
+        temporaryUser.Email = temporaryUser.Email.Trim().ToLower();
+        temporaryUser.Password = temporaryUser.Password.Trim();
+    }
+    private void HandleLogout()
+    {
+        OnLogout.InvokeAsync();
+    }
+    private void HandleModalStateChange(ModalState modalState)
+    {
+        OnModalStateChange.InvokeAsync(modalState);
+    }
+}

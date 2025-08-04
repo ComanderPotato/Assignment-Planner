@@ -1,0 +1,74 @@
+﻿@inject ApplicationState ApplicationState
+@if (TaskItem != null)
+{
+
+    <div class="form-body">
+
+        <div class="form-input--group">
+            <label class="form-label" for="">Subject ID</label>
+            <span class="form-span">@TaskItem.SubjectID</span>
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="">Subject Name</label>
+            <span class="form-span">@TaskItem.SubjectName</span>
+        </div>
+        <div class="form-input--group">
+            <label class="form-label">Task Title</label>
+            <span class="form-span">@TaskItem.TaskItemTitle</span>
+
+        </div>
+        <div class="form-input--group">
+            <label class="form-label" for="dueDate">Due Date</label>
+            <span class="form-span">@TaskItem.Date</span>
+
+        </div>
+        @if (TaskItem is Assignment assignment)
+        {
+
+            <div class="form-input--numbers grid-col-span-2">
+                <div class="form-input--group">
+                    <label class="form-label">Achieved</label>
+                    <span class="form-span">@assignment.AchievedMark</span>
+                </div>
+                <div class="form-input--group">
+                    <label class="form-label">Total</label>
+                    <span class="form-span">@assignment.TotalMark</span>
+                </div>
+                <div class="form-input--group">
+                    <label class="form-label">Percentage</label>
+                    <span class="form-span">@assignment.Percentage</span>
+                </div>
+            </div>
+        }
+        <div class="form-input--group grid-col-span-2">
+            <label class="form-label" for="">Description</label>
+            <span class="form-span grid-col-span-2">@TaskItem.Description</span>
+
+        </div>
+        <div>
+            <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="() => HandleModalStateChange(ModalState.ViewTasks)">
+                &larr;
+            </CustomButton>
+        </div>
+        <div class="form-btns">
+            <CustomButton Type="button" Class="form-btn CTA-btn" OnClick="() => HandleModalStateChange(ModalState.EditTask)">
+                Edit
+            </CustomButton>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public required TaskItem TaskItem { get; set; }
+
+    [Parameter]
+    public EventCallback<ModalState> OnModalStateChange { get; set; }
+
+    [Parameter]
+    public EventCallback OnTaskItemDelete { get; set; }
+
+    private void HandleModalStateChange(ModalState modalState)
+    {
+        OnModalStateChange.InvokeAsync(modalState);
+    }
+}

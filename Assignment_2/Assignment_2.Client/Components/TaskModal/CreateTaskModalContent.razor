@@ -1,0 +1,207 @@
+﻿@inject ITaskItemService TaskItemService;
+@inject NavigationManager NavigationManager;
+@inject ApplicationState ApplicationState;
+<EditForm EditContext="editContext" OnSubmit="HandleAddNewTask" class="form-body">
+    <DataAnnotationsValidator />
+    <div class="form-input--group">
+        <label class="form-label" for="taskType">Task Type</label>
+        <InputSelect @bind-Value="newTaskItem.Discriminator" id="taskType" class="form-input">
+            <option value="Assignment">Assignment</option>
+            <option value="HomeWork">Homework</option>
+        </InputSelect>
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="dueDate">Due Date</label>
+        <InputDate Type="InputDateType.DateTimeLocal" id="dueDate" class="form-input" @bind-Value="newTaskItem.Date" />
+        <ValidationMessage For="@(() => newTaskItem.Date)" />
+    </div>
+
+    <div class="form-input--group">
+        <label class="form-label" for="subjectId">Subject ID</label>
+        <InputText required
+                   @bind-Value="newTaskItem.SubjectID"
+                   id="subjectId"
+                   class="form-input"
+                   placeholder="Enter Subject ID"
+                   @oninput="FindSubject"
+                   @onfocusout="FindSubject" />
+        <ValidationMessage For="@(() => newTaskItem.SubjectID)" />
+    </div>
+
+    <div class="form-input--group">
+        <label class="form-label" for="subjectName">Subject Name</label>
+        <InputText required
+                   @bind-Value="newTaskItem.SubjectName"
+                   id="subjectName"
+                   class="form-input"
+                   readonly="@(isSubjectFound)"
+                   placeholder="Enter Subject Name">@newTaskItem.SubjectName</InputText>
+        <ValidationMessage For="@(() => newTaskItem.SubjectName)" />
+    </div>
+
+    <div class="form-input--group">
+        <label class="form-label" for="taskTitle">Task Title</label>
+        <InputText required
+                   @bind-Value="newTaskItem.TaskItemTitle"
+                   id="taskTitle"
+                   class="form-input"
+                   placeholder="Enter Task Title" />
+        <ValidationMessage For="@(() => newTaskItem.TaskItemTitle)" />
+    </div>
+    @if (newTaskItem.Discriminator.Equals("Assignment"))
+    {
+        <div class="form-input--group @isHiddenCSS">
+            <label class="form-label" for="percentage">Percentage</label>
+            <InputNumber @bind-Value="((Assignment)newTaskItem).Percentage"
+                         id="percentage"
+                         class="form-input form-input--percentage" />
+            <ValidationMessage For="@(() => ((Assignment)newTaskItem).Percentage)" />
+            @if (!string.IsNullOrEmpty(percentageErrorMessage))
+            {
+                <div class="validation-message">@percentageErrorMessage</div>
+            }
+
+        </div>
+    }
+
+    <div class="form-input--group grid-col-span-2">
+        <label class="form-label" for="description">Description</label>
+        <InputTextArea id="description"
+                       @bind-Value="newTaskItem.Description"
+                       class="form-input"
+                       rows="3"
+                       placeholder="Enter Task Description"></InputTextArea>
+    </div>
+    <div>
+        <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="() => HandleModalStateChange(ModalState.ViewTasks)">
+            &larr;
+        </CustomButton>
+    </div>
+    <div class="form-btns">
+        <CustomButton Type="submit" Class="form-btn CTA-btn">
+            Add
+        </CustomButton>
+    </div>
+</EditForm>
+@code {
+    [Parameter]
+    public EventCallback<ModalState> OnModalStateChange { get; set; }
+
+    [Parameter]
+    public DateTime SelectedDay { get; set; }
+
+    private bool isSubjectFound = false;
+    private string percentageErrorMessage = string.Empty;
+    private string newTaskItemType = "Assignment";
+    private string isHiddenCSS => newTaskItemType == "Assignment" ? string.Empty : "hidden";
+    private TaskItem newTaskItem = new TaskItem { UserId = 0 };
+    private EditContext? editContext;
+
+
+
+    protected override void OnParametersSet()
+    {
+        SetFields();
+        StateHasChanged();
+    }
+    protected override void OnInitialized()
+    {
+        SetFields();
+    }
+
+    private void SetFields()
+    {
+        if (ApplicationState.CurrentUser == null) return;
+        newTaskItem = new Assignment
+            {
+                UserId = ApplicationState.CurrentUser.Id,
+                Date = SelectedDay,
+                Discriminator = "Assignment"
+            };
+        editContext = new EditContext(newTaskItem);
+    }
+
+    private void HandleModalStateChange(ModalState modalState)
+    {
+        OnModalStateChange.InvokeAsync(modalState);
+    }
+    private async Task HandleAddNewTask()
+    {
+
+        int userId = ApplicationState.CurrentUser!.Id;
+
+        if (editContext!.Validate())
+        {
+
+            if (newTaskItem.Discriminator.Equals("Assignment"))
+            {
+                float percentageSum = ApplicationState.TaskItems.Sum(taskItem =>
+                {
+                    if (taskItem.SubjectID == newTaskItem.SubjectID && taskItem is Assignment assignment)
+                    {
+                        return assignment.Percentage;
+                    }
+                    return 0.0f;
+                });
+                if (percentageSum + ((Assignment)newTaskItem).Percentage > 100)
+                {
+                    percentageErrorMessage = $"Total percentage for subjectId {newTaskItem.SubjectID} must not be greater than 100%";
+                    return;
+                }
+                newTaskItem = new Assignment
+                    {
+                        Discriminator = newTaskItem.Discriminator,
+                        UserId = userId,
+                        Date = newTaskItem.Date,
+                        SubjectID = newTaskItem.SubjectID,
+                        SubjectName = newTaskItem.SubjectName,
+                        TaskItemTitle = newTaskItem.TaskItemTitle,
+                        Description = newTaskItem.Description,
+                        Percentage = ((Assignment)newTaskItem).Percentage,
+                        AchievedMark = 0.0f,
+                        TotalMark = 0.0f
+                    };
+            }
+            else
+            {
+                newTaskItem = new HomeWork
+                    {
+                        Discriminator = newTaskItem.Discriminator,
+                        UserId = userId,
+                        Date = newTaskItem.Date,
+                        SubjectID = newTaskItem.SubjectID,
+                        SubjectName = newTaskItem.SubjectName,
+                        TaskItemTitle = newTaskItem.TaskItemTitle,
+                        Description = newTaskItem.Description,
+                    };
+            }
+            percentageErrorMessage = string.Empty;
+            await TaskItemService.AddTaskItem(newTaskItem);
+            SetFields();
+            ApplicationState.TaskItems = await TaskItemService.GetTaskItemsByUserId(ApplicationState.CurrentUser.Id);
+            HandleModalStateChange(ModalState.ViewTasks);
+            NavigationManager.Refresh(true);
+        }
+    }
+    private void FindSubject()
+    {
+        TaskItem taskItem = ApplicationState.TaskItems.Find(item => item.SubjectID == newTaskItem.SubjectID)!;
+        if (taskItem != null)
+        {
+            newTaskItem.SubjectName = taskItem.SubjectName;
+            isSubjectFound = true;
+        }
+        else
+        {
+            newTaskItem.SubjectName = string.Empty;
+            isSubjectFound = false;
+        }
+    }
+    private void TrimInputs()
+    {
+        newTaskItem.SubjectID = newTaskItem.SubjectID.Trim();
+        newTaskItem.SubjectName = newTaskItem.SubjectName.Trim();
+        newTaskItem.TaskItemTitle = newTaskItem.TaskItemTitle.Trim();
+        newTaskItem.Description = newTaskItem.Description.Trim();        
+    }
+}

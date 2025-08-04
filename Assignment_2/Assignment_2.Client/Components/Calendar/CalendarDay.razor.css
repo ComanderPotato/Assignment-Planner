@@ -1,0 +1,43 @@
+﻿﻿.calendar-day {
+    border: 0.1rem var(--neutral-silver) solid;
+    cursor: pointer;
+}
+
+.calendar-day--header {
+    padding: 0.4rem 1rem 0.4rem 1rem;
+    display: flex;
+    justify-content: end;
+    user-select: none;
+    pointer-events: none;
+}
+
+.calendar-day--header > span {
+    display: flex;
+    /* width: 3.4rem; */
+    /* min-width: 3rem; */
+    align-items: center;
+    justify-content: center;
+    /* aspect-ratio: 1 / 1; */
+    padding: 1rem 1.4rem;
+    border-radius: 999px;
+    font-size: 1.6rem;
+    color: var(--neutral-silver);
+}
+
+.calendar-day--items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0rem 0.4rem;
+    user-select: none;
+    pointer-events: none;
+    color: var(--neutral-silver);
+}
+
+.circled-day {
+    background-color: var(--accent-red);
+}
+
+.off-month {
+    color: var(--neutral-light-blue) !important;
+}

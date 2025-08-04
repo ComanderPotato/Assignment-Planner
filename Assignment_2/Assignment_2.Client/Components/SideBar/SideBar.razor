@@ -1,0 +1,78 @@
+﻿@inject ApplicationState ApplicationState;
+@inject IJSRuntime JS
+<div class="sidebar">
+    <div class="sidebar-content">
+        <div class="sidebar-icon--container" @onclick="HideSideBar">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke-width="1.5"
+                 stroke="currentColor"
+                 class="size-6 arrow-icon">
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+        </div>
+        <div class="sidebar-header">
+            <h1>Dashboard</h1>
+            <div class="sidebar-header--btn" @onclick="HandleAccountClick">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+            </div>
+        </div>
+        <div class="sidebar-sections">
+            <SideBarSection Header="Upcoming Tasks" TaskItems="upcomingTaskItems" />
+            <SideBarSection Header="Completed Tasks" TaskItems="completedTaskItems" />
+            <SideBarSection Header="Subject Status" SubjectItems="subjectStatusDict" />
+
+
+        </div>
+    </div>
+</div>
+<Modal Header="Account Information" IsModalOpen="isModalOpen" ModalState="ApplicationState.SidebarAccountModalState" ModalContent="@AccountModal" />
+
+@code {
+    private RenderFragment AccountModal =>@<Assignment_2.Client.Components.AccountModal.AccountModal />;
+
+    private bool isModalOpen => ApplicationState.SidebarAccountModalState == ModalState.Closed ? false : true;
+
+    private List<TaskItem> upcomingTaskItems = new List<TaskItem>();
+    private List<TaskItem> completedTaskItems = new List<TaskItem>();
+    private Dictionary<string, List<TaskItem>> subjectStatusDict = new Dictionary<string, List<TaskItem>>();
+
+    private void HandleAccountClick()
+    {
+        ApplicationState.SidebarAccountModalState = ModalState.Open;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        ApplicationState.PropertyChanged += ApplicationStatePropertyChanged;
+        SetUpSideBarSectionContainers();
+    }
+    private void SetUpSideBarSectionContainers()
+    {
+
+        upcomingTaskItems = ContainerUtilities.GetUpcomingTasks<TaskItem>(ApplicationState.TaskItems, TaskItem => TaskItem.Date);
+        completedTaskItems = ContainerUtilities.GetCompletedTasks<TaskItem>(ApplicationState.TaskItems, TaskItem => TaskItem.Date);
+        subjectStatusDict = ContainerUtilities.GroupTaskItemsBySubject<TaskItem, string>(ApplicationState.TaskItems, taskItem => taskItem.SubjectID);
+    }
+    private async void HideSideBar()
+    {
+        await JS.InvokeVoidAsync("hideSidebar");
+    }
+    private void ApplicationStatePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+    public void Dispose()
+    {
+        ApplicationState.PropertyChanged -= ApplicationStatePropertyChanged;
+    }
+}

@@ -1,0 +1,45 @@
+﻿@inject ApplicationState ApplicationState
+@inject NavigationManager NavigationManager
+@if (ApplicationState.CurrentUser != null)
+{
+    @switch (ApplicationState.SidebarAccountModalState)
+    {
+        case ModalState.EditAccount:
+            <EditAccountModal OnLogout="Logout" OnModalStateChange="ChangeModalState" />
+            break;
+        case ModalState.ViewAccount:
+        default:
+            <ViewAccountModal OnLogout="Logout" OnModalStateChange="ChangeModalState" />
+            break;
+    }
+}
+@code {
+
+    protected override void OnInitialized()
+    {
+        ApplicationState.PropertyChanged += ApplicationStatePropertyChanged;
+    }
+
+    private void ChangeModalState(ModalState modalState)
+    {
+        ApplicationState.SidebarAccountModalState = modalState;
+        StateHasChanged();
+    }
+    private void Logout()
+    {
+        ApplicationState.Reset();
+        NavigationManager.NavigateTo("/login");
+    }
+    private void ApplicationStatePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+    public void Dispose()
+    {
+        ApplicationState.PropertyChanged -= ApplicationStatePropertyChanged;
+    }
+}
+

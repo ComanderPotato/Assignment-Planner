@@ -1,0 +1,20 @@
+﻿<button type=@Type class=@Class @onclick="HandleOnClick">@ChildContent</button>
+
+@code {
+    [Parameter]
+    public string Type { get; set; } = string.Empty;
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public Action? OnClick{ get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public void HandleOnClick()
+    {
+        OnClick?.Invoke();
+    }
+
+}

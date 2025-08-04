@@ -1,0 +1,24 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager;
+@inject IUserService UserService;
+@inject ApplicationState ApplicationState;
+@inject ITaskItemService TaskItemService;
+@rendermode InteractiveAuto
+
+@if (ApplicationState.CurrentUser != null)
+{
+    NavigationManager.NavigateTo("/dashboard");
+}
+else
+{
+    NavigationManager.NavigateTo("/login");
+}
+
+@code {
+
+    protected async override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+
+}

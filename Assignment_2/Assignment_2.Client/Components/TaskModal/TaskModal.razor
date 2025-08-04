@@ -1,0 +1,117 @@
+﻿@inject ApplicationState ApplicationState
+@inject ITaskItemService TaskItemService
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@switch (ApplicationState.TaskModalState)
+{
+    case ModalState.CreateTask:
+        <CreateTaskModalContent OnModalStateChange="ChangeModalState" SelectedDay="SelectedDay" />
+        break;
+    case ModalState.ViewTask:
+        <ViewTaskModalContent OnModalStateChange="ChangeModalState" TaskItem="selectedTaskItem" />
+        break;
+    case ModalState.EditTask:
+        <EditTaskModalContent OnModalStateChange="ChangeModalState" OnTaskItemUpdate="HandleTaskItemUpdate" OnTaskItemDelete="HandleTaskItemDelete" TaskItem="selectedTaskItem" />
+        break;
+    case ModalState.ViewTasks:
+    case ModalState.Open:
+    default:
+        <CascadingValue Value="selectedTaskItem">
+            <CascadingValue Value="HandleTaskItemSelection" Name="OnTaskItemSelection">
+                <ViewTasksModalContent OnModalStateChange="ChangeModalState" OnFilterTaskItems="HandleFilterTaskItemsByInput" FilteredTasks="filteredTasks" />
+            </CascadingValue>
+        </CascadingValue>
+        break;
+}
+
+
+@code {
+
+    [Parameter]
+    public DateTime SelectedDay { get; set; }
+
+    private List<TaskItem> filteredTasks = new List<TaskItem>();
+    private TaskItem? selectedTaskItem;
+    protected override void OnParametersSet()
+    {
+        FilterTasksBySelectedDay();
+    }
+    private void FilterTasksBySelectedDay()
+    {
+        if (ApplicationState.CurrentUser != null && ApplicationState.TaskItems.Count != 0)
+        {
+            filteredTasks = (from taskItem in ApplicationState.TaskItems
+                             where taskItem.Date.Date == SelectedDay.Date
+                             orderby taskItem.Date.Date ascending
+                             select taskItem).ToList();
+        }
+        else
+        {
+            filteredTasks = new List<TaskItem>();
+        }
+    }
+    private void HandleFilterTaskItemsByInput(string filterQuery)
+    {
+        if (filterQuery.Length != 0)
+        {
+            filteredTasks = (from taskItem in ApplicationState.TaskItems
+                             where taskItem.Date.Date == SelectedDay.Date &&
+                                   (taskItem.SubjectID.Contains(filterQuery, StringComparison.OrdinalIgnoreCase) ||
+                                    taskItem.SubjectName.Contains(filterQuery, StringComparison.OrdinalIgnoreCase) ||
+                                    taskItem.TaskItemTitle.Contains(filterQuery, StringComparison.OrdinalIgnoreCase) ||
+                                    taskItem.Description.Contains(filterQuery, StringComparison.OrdinalIgnoreCase))
+                             orderby taskItem.Date.Date ascending
+                             select taskItem).ToList();
+        }
+        else
+        {
+            FilterTasksBySelectedDay();
+        }
+    }
+    private void ChangeModalState(ModalState modalState)
+    {
+        ApplicationState.TaskModalState = modalState;
+        StateHasChanged();
+    }
+    private void HandleTaskItemSelection(TaskItem taskItem)
+    {
+        selectedTaskItem = taskItem;
+        ApplicationState.TaskModalState = ModalState.ViewTask;
+    }
+
+    private async void HandleTaskItemDelete()
+    {
+        if (selectedTaskItem != null)
+        {
+            try
+            {
+                await TaskItemService.DeleteTaskItem(selectedTaskItem);
+                ApplicationState.TaskItems = await TaskItemService.GetTaskItemsByUserId(ApplicationState.CurrentUser!.Id);
+                ApplicationState.TaskModalState = ModalState.ViewTasks;
+                selectedTaskItem = null;
+                NavigationManager.Refresh(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while deleting the task: {ex.Message}");
+            }
+        }
+    }
+    private async void HandleTaskItemUpdate(TaskItem updatedTaskItem)
+    {
+        if (selectedTaskItem != null)
+        {
+            try
+            {
+                await TaskItemService.UpdateTaskItem(updatedTaskItem);
+                ApplicationState.TaskItems = await TaskItemService.GetTaskItemsByUserId(ApplicationState.CurrentUser!.Id);
+                ApplicationState.TaskModalState = ModalState.ViewTask;
+                selectedTaskItem = updatedTaskItem;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while deleting the task: {ex.Message}");
+            }
+        }
+    }
+}

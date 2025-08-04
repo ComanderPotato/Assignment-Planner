@@ -1,0 +1,18 @@
+﻿.sidebar-section {
+    background-color: var(--deep-blue);
+    padding: 1rem;
+    border-radius: 1rem;
+}
+.sidebar-section--header {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+.sidebar-section--items {
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    height: 90%;
+    overflow-y: auto;
+    gap: 1rem;
+    padding-right: 1rem;
+}

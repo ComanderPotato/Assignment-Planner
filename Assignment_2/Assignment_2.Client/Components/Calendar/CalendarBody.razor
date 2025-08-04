@@ -1,0 +1,84 @@
+﻿@inject IJSRuntime JS
+@inject ApplicationState ApplicationState
+@rendermode InteractiveServer
+<div class="calendar-body" @onclick="HandleCalendarClick">
+
+    @foreach (DateTime day in days)
+    {
+        <CalendarDay Date="@day" />
+    }
+
+</div>
+<Modal Header="Tasks" IsModalOpen="isModalOpen" ModalState="ApplicationState.TaskModalState" ModalContent="@TaskModal" />
+
+@code {
+    private List<DateTime> days = new List<DateTime>();
+    private RenderFragment TaskModal => @<Assignment_2.Client.Components.TaskModal.TaskModal SelectedDay="@ApplicationState.SelectedDayDate" />;
+    private DateTime dateIncrementor;
+    private bool isModalOpen => ApplicationState.TaskModalState == ModalState.Closed ? false : true;
+    protected override void OnInitialized()
+    {
+        ApplicationState.PropertyChanged += ApplicationStatePropertyChanged;
+        SetUpCalendar();
+    }
+    protected override void OnParametersSet()
+    {
+        SetUpCalendar();
+    }
+    private void SetUpCalendar()
+    {
+        dateIncrementor = ApplicationState.DummyDate;
+        dateIncrementor = GetPreviousMonday(GetFirstDayOfMonth());
+        FillCalendarDays();
+        StateHasChanged();
+    }
+    private async void HandleCalendarClick(MouseEventArgs e)
+    {
+        string selectedDate = await JS.InvokeAsync<string>("getElementAtCoordinates", e.ClientX, e.ClientY);
+        ApplicationState.SelectedDayDate = Formatter.FormatToDateTime(selectedDate);
+        ApplicationState.TaskModalState = ModalState.Open;
+        StateHasChanged();
+    }
+    private void FillCalendarDays()
+    {
+        days.Clear();
+        for (int i = 0; i < 42; i++)
+        {
+            days.Add(dateIncrementor);
+            dateIncrementor = dateIncrementor.AddDays(1);
+        }
+    }
+    private DateTime GetFirstDayOfMonth()
+    {
+        return new DateTime(dateIncrementor.Year, dateIncrementor.Month, 1);
+    }
+
+    private int GetCustomDayOfWeek(int day)
+    {
+        return day == 0 ? 6 : day - 1;
+    }
+
+    private DateTime GetPreviousMonday(DateTime date)
+    {
+        if (date.DayOfWeek == DayOfWeek.Monday)
+        {
+            return date;
+        }
+        int daysToSubtract = GetCustomDayOfWeek((int)date.DayOfWeek);
+        return date.AddDays(-daysToSubtract);
+    }
+
+
+    private void ApplicationStatePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+        SetUpCalendar();
+    }
+    public void Dispose()
+    {
+        ApplicationState.PropertyChanged -= ApplicationStatePropertyChanged;
+    }
+}

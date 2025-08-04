@@ -1,0 +1,63 @@
+﻿@using System.ComponentModel
+@inject NavigationManager NavigationManager
+@inject ApplicationState ApplicationState
+
+    <div class="modal-overlay @ModalHiddenCSS">
+        <div class="modal">
+            <div class="modal-header">
+                <h1>@Header</h1>
+                <div class="modal-cancel--btn" @onclick=@ToggleModal>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="cancel">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </div>
+            </div>
+            @ModalContent
+        </div>
+    </div>
+@code {
+    [Parameter]
+    public required string Header { get; set; }
+    [Parameter]
+    public required RenderFragment ModalContent { get; set; }
+    [Parameter]
+    public bool IsModalOpen { get; set; }
+    [Parameter]
+    public ModalState ModalState { get; set; }
+
+
+    public string ModalHiddenCSS => IsModalOpen ? string.Empty : "modal-hidden"; 
+    public void ToggleModal()
+    {
+        ApplicationState.ResetModalStates();
+        NavigationManager.Refresh(true);
+        StateHasChanged();
+    }
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+    protected override void OnInitialized()
+    {
+        ApplicationState.PropertyChanged += ApplicationStatePropertyChanged;
+
+    }
+    private void ApplicationStatePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+    public void Dispose()
+    {
+        ApplicationState.PropertyChanged -= ApplicationStatePropertyChanged;
+    }
+}

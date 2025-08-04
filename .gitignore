@@ -1,0 +1,17 @@
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+*.log
+TestResults/
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+*.db
+*.cache
+*.pdb

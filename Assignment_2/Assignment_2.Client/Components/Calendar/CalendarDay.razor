@@ -1,0 +1,63 @@
+﻿@using System.ComponentModel
+@inject ApplicationState ApplicationState
+<div class="calendar-day" data-date=@FormatDataAttribute()>
+    <div class="calendar-day--header"><span class="@isTodayCSS @isCurrentMonthCSS">@ConstructHeaderString()</span></div>
+    <div class="calendar-day--items">
+        @for (int i = 0; i < todaysTaskItems.Count; i++)
+            {
+                @if (i >= 4) break;
+                <CalendarDayItem TaskItem="todaysTaskItems[i]" />
+            }
+        @if(todaysTaskItems.Count > 4)
+        {
+            <div class="calendar-day--item">
+                <span class="calendar-day--title">@(todaysTaskItems.Count - 4) more...</span>
+            </div>
+        }
+    </div>
+</div>
+@code {
+    [Parameter]
+    public DateTime Date { get; set; }
+
+    private string isTodayCSS => IsToday() ? "circled-day" : string.Empty;
+    private string isCurrentMonthCSS => IsCurrentMonth() ? string.Empty : "off-month";
+
+    private List<TaskItem> todaysTaskItems = new List<TaskItem>();
+
+    protected override void OnInitialized()
+    {
+        SetUpDay();
+    }
+    protected override void OnParametersSet()
+    {
+        SetUpDay();
+    }
+    private void SetUpDay()
+    {
+        GetTasksForToday();
+    }
+    private void GetTasksForToday()
+    {
+        todaysTaskItems = (from taskItem in ApplicationState.TaskItems
+                           where taskItem.Date.Date == Date.Date
+                           orderby taskItem.Date ascending
+                           select taskItem).ToList();
+    }
+    public string ConstructHeaderString()
+    {
+        return Date.Day == 1 ? $"{Constants.MONTHS[Date.Month - 1].Substring(0, 3)} {Date.Day.ToString()}" : Date.Day.ToString();
+    }
+    private string FormatDataAttribute()
+    {
+        return Date.Date.ToString("dd-MM-yyyy");
+    }
+    private bool IsToday()
+    {
+        return Date.Date == DateTime.Today;
+    }
+    public bool IsCurrentMonth()
+    {
+        return Date.Month == ApplicationState.DummyDate.Month;
+    }
+}

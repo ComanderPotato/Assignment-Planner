@@ -1,0 +1,12 @@
+﻿@rendermode InteractiveServer
+<div class="calendar">
+    <CalendarTopBar />
+    <CalendarHeader />
+    <CalendarBody />
+</div>
+@code {
+    protected override void OnInitialized()
+    {
+        StateHasChanged();
+    }
+}

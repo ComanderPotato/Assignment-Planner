@@ -1,0 +1,37 @@
+﻿@page "/dashboard"
+@inject IJSRuntime JS
+@inject ApplicationState ApplicationState;
+@inject ITaskItemService TaskItemService;
+@rendermode InteractiveServer
+
+<div class="dashboard">
+    <SideBar />
+    <Calendar />
+</div>
+@code {
+
+    private async void UpdateState()
+    {
+        ApplicationState.TaskItems = await TaskItemService.GetTaskItemsByUserId(ApplicationState.CurrentUser!.Id);
+        StateHasChanged();
+    }
+
+
+    protected override void OnInitialized()
+    {
+        ApplicationState.PropertyChanged += ApplicationStatePropertyChanged;
+        UpdateState();
+    }
+
+    private async void ApplicationStatePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+    public void Dispose()
+    {
+        ApplicationState.PropertyChanged -= ApplicationStatePropertyChanged;
+    }
+}

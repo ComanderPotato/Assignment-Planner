@@ -1,0 +1,9 @@
+﻿﻿.calendar-day--item {
+    color: var(--neutral-silver);
+    padding: 0.4rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    background-color: #2e3944;
+    border-radius: 0.4rem;
+    cursor: pointer;
+}

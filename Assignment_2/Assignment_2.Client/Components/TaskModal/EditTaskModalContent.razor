@@ -1,0 +1,204 @@
+﻿@inject ITaskItemService TaskItemService;
+@inject NavigationManager NavigationManager;
+<EditForm EditContext="updatedTaskItemContext" OnSubmit="HandleTaskItemUpdate" class="form-body">
+    <DataAnnotationsValidator />
+    <div class="form-input--group">
+        <label class="form-label" for="">Subject ID</label>
+
+        <InputText id="updatedFirstName"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryTaskItem.SubjectID" />
+        <ValidationMessage For="@(() => temporaryTaskItem.SubjectID)" />
+
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="">Subject Name</label>
+
+
+        <InputText id="updatedFirstName"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryTaskItem.SubjectName" />
+        <ValidationMessage For="@(() => temporaryTaskItem.SubjectName)" />
+
+
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="">Task Title</label>
+
+        <InputText id="updatedFirstName"
+                   required
+                   type="text"
+                   class="form-input"
+                   @bind-Value="@temporaryTaskItem.TaskItemTitle" />
+        <ValidationMessage For="@(() => temporaryTaskItem.TaskItemTitle)" />
+
+    </div>
+    <div class="form-input--group">
+        <label class="form-label" for="dueDate">Due Date</label>
+        <InputDate Type="InputDateType.DateTimeLocal" id="dueDate" class="form-input" @bind-Value="temporaryTaskItem.Date" />
+        <ValidationMessage For="@(() => temporaryTaskItem.Date)" />
+    </div>
+    @if (temporaryTaskItem is Assignment assignment)
+    {
+
+        <div class="form-input--numbers grid-col-span-2">
+            <div class="form-input--group">
+                <label class="form-label">Achieved</label>
+                <InputNumber @bind-Value="assignment.AchievedMark"
+                             id="percentage"
+                             class="form-input form-input--percentage" />
+
+                <ValidationMessage For="@(() => assignment.AchievedMark)" />
+            </div>
+            <div class="form-input--group">
+                <label class="form-label">Total</label>
+                <InputNumber @bind-Value="assignment.TotalMark"
+                             id="percentage"
+                             class="form-input form-input--percentage" />
+                <ValidationMessage For="@(() => assignment.TotalMark)" />
+            </div>
+            <div class="form-input--group">
+                <label class="form-label">Percentage</label>
+                <InputNumber @bind-Value="assignment.Percentage"
+                             id="percentage"
+                             class="form-input form-input--percentage" />
+                <ValidationMessage For="@(() => assignment.Percentage)" />
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(achievedMarkError))
+        {
+            <div class="validation-message">@achievedMarkError</div>
+        }
+    }
+    <div class="form-input--group grid-col-span-2">
+        <label class="form-label" for="">Description</label>
+
+
+        <InputTextArea id="description"
+                       @bind-Value="temporaryTaskItem.Description"
+                       class="form-input"
+                       rows="3"
+                       placeholder="Enter Task Description"></InputTextArea>
+
+    </div>
+    <div>
+        <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="() => HandleModalStateChange(ModalState.ViewTasks)">
+            &larr;
+        </CustomButton>
+        <CustomButton Type="button" Class="form-btn accent-btn" OnClick="HandleTaskItemDelete">
+            Delete
+        </CustomButton>
+    </div>
+    <div class="form-btns">
+        <CustomButton Type="button" Class="form-btn secondary-btn" OnClick="() => HandleModalStateChange(ModalState.ViewTask)">
+            Cancel
+        </CustomButton>
+        <CustomButton Type="submit" Class="form-btn CTA-btn">
+            Save
+        </CustomButton>
+    </div>
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public EventCallback<ModalState> OnModalStateChange { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskItem> OnTaskItemUpdate { get; set; }
+
+    [Parameter]
+    public EventCallback OnTaskItemDelete { get; set; }
+
+    [Parameter]
+    public required TaskItem TaskItem { get; set; }
+
+    private string achievedMarkError = string.Empty;
+
+    private TaskItem temporaryTaskItem;
+    private EditContext updatedTaskItemContext;
+
+    protected override void OnInitialized()
+    {
+        InitializeModal();
+    }
+    private void InitializeModal()
+    {
+        if (TaskItem != null)
+        {
+            if (TaskItem is Assignment assignment)
+            {
+
+                temporaryTaskItem = new Assignment
+                    {
+                        Id = assignment.Id,
+                        UserId = assignment.UserId,
+                        SubjectID = assignment.SubjectID,
+                        SubjectName = assignment.SubjectName,
+                        Description = assignment.Description,
+                        TaskItemTitle = assignment.TaskItemTitle,
+                        Percentage = assignment.Percentage,
+                        TotalMark = assignment.TotalMark,
+                        AchievedMark = assignment.AchievedMark,
+                        Discriminator = assignment.Discriminator,
+                        Date = assignment.Date
+                    };
+            } else if (TaskItem is HomeWork homework)
+            {
+                temporaryTaskItem = new HomeWork
+                    {
+                        Id = homework.Id,
+                        UserId = homework.UserId,
+                        SubjectID = homework.SubjectID,
+                        SubjectName = homework.SubjectName,
+                        Description = homework.Description,
+                        TaskItemTitle = homework.TaskItemTitle,
+                        Discriminator = homework.Discriminator,
+                        Date = homework.Date
+                    };
+            }
+            updatedTaskItemContext = new EditContext(temporaryTaskItem);
+        }
+    }
+
+
+    private void HandleModalStateChange(ModalState modalState)
+    {
+        InitializeModal();
+        OnModalStateChange.InvokeAsync(modalState);
+    }
+    public void HandleTaskItemDelete()
+    {
+        OnTaskItemDelete.InvokeAsync();
+    }
+    public void HandleTaskItemUpdate()
+    {
+        TrimInputs();
+        if (TaskItem is Assignment)
+        {
+            if (((Assignment)temporaryTaskItem).AchievedMark > ((Assignment)temporaryTaskItem).TotalMark)
+            {
+                achievedMarkError = "Achieved mark must be smaller than total mark";
+                return;
+            }
+            achievedMarkError = string.Empty;
+        }
+        var messageList = updatedTaskItemContext.GetValidationMessages().ToList();
+        
+        if (messageList.Count == 0 || (messageList.Count == 1 && messageList.First().Equals("The date must be in the future.")))
+        {
+            OnTaskItemUpdate.InvokeAsync(temporaryTaskItem);
+        }
+    }
+    private void TrimInputs()
+    {
+        temporaryTaskItem.SubjectID = temporaryTaskItem.SubjectID.Trim();
+        temporaryTaskItem.SubjectName = temporaryTaskItem.SubjectName.Trim();
+        temporaryTaskItem.TaskItemTitle = temporaryTaskItem.TaskItemTitle.Trim();
+        temporaryTaskItem.Description = temporaryTaskItem.Description.Trim();
+    }
+}

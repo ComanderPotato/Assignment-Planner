@@ -1,0 +1,66 @@
+﻿@inject ApplicationState ApplicationState
+<div class="form-body">
+    <div class="form-filter--group grid-col-span-2">
+        <label class="form-label" for="">Filter</label>
+        <input class="form-input"
+               type="text"
+               placeholder="Search here" 
+               @bind="FilterQuery"
+               @oninput="HandleTaskItemFilter" />
+    </div>
+    <div class="form-container--header grid-col-span-2">
+        <span>Subject Name</span>
+        <span>Subject Id</span>
+        <span>Assignment Name</span>
+        <span>Percentage</span>
+        <span>Due Date</span>
+    </div>
+    <div class="form-container--tasks grid-col-span-2">
+        @if (FilteredTasks!.Count != 0)
+        {
+            @foreach(TaskItem taskItem in FilteredTasks)
+            {
+                <TaskItemContentComponent TaskItem="taskItem" OnTaskItemSelection="OnTaskItemSelection" />
+            }
+        } else
+        {
+            <div class="form-item--task">
+                <span>You have no tasks to complete :(</span>
+            </div>
+        }
+    </div>
+    <div class="form-btns">
+        <CustomButton Type="button" Class="form-btn CTA-btn" OnClick="() => HandleModalStateChange(ModalState.CreateTask)">
+            Create new task
+        </CustomButton>
+    </div>
+</div>
+@code {
+    [CascadingParameter(Name = "OnTaskItemSelection")]
+    public required Action<TaskItem> OnTaskItemSelection { get; set; }
+
+
+    [Parameter]
+    public required List<TaskItem> FilteredTasks { get; set; }
+
+    [Parameter]
+    public EventCallback<ModalState> OnModalStateChange { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFilterTaskItems{ get; set; }
+
+    private string FilterQuery { get; set; } = string.Empty;
+
+
+    private void HandleModalStateChange(ModalState modalState)
+    {
+
+        OnModalStateChange.InvokeAsync(modalState);
+        FilterQuery = string.Empty;
+    }
+    private void HandleTaskItemFilter(ChangeEventArgs e)
+    {
+        FilterQuery = e.Value!.ToString()!;
+        OnFilterTaskItems.InvokeAsync(FilterQuery);
+    }
+}

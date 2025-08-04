@@ -1,0 +1,14 @@
+﻿<div class="calendar-day--item">
+    <span class="day-item--title">@ShortenTitle(TaskItem.TaskItemTitle)</span>
+    <span class="day-item--time">@TaskItem.Date.ToString("HH:mm")</span>
+</div>
+
+@code {
+    [Parameter]
+    public required TaskItem TaskItem { get; set; }
+
+    private string ShortenTitle(string title)
+    {
+        return title.Length > 15 ? title.Substring(0, 15) + "..." : title;
+    }
+}

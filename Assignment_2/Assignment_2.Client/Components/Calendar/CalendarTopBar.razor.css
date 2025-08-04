@@ -1,0 +1,19 @@
+﻿﻿.calendar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 1.4rem;
+    background-color: var(--deep-blue);
+    color: var(--neutral-silver);
+}
+
+.year {
+    font-size: 3.4rem;
+    font-weight: lighter;
+}
+
+.month {
+    margin-right: 0.8rem;
+    font-size: 3rem;
+    font-weight: normal;
+}
