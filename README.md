@@ -87,21 +87,6 @@ A single-page web application built with **Blazor** to help students manage thei
 
 ---
 
-## 📂 Folder Structure (Optional)
-
-```
-Assignment_2/
-├── Client/                  # Blazor WebAssembly frontend
-├── Server/                  # Backend logic and EF Core setup
-├── Shared/                  # Shared models and DTOs
-├── Migrations/              # EF Core migration history
-├── Data/Database/           # SQLite or SQL Server DB
-├── wwwroot/                 # Static assets
-└── .vs/, bin/, obj/         # Ignored build and IDE folders
-```
-
----
-
 ## 📌 Why Blazor?
 
 Originally considered **Windows Forms**, but Blazor was selected due to:
@@ -122,11 +107,19 @@ Originally considered **Windows Forms**, but Blazor was selected due to:
 
 ---
 
-## 📸 UI Preview (If you're including screenshots)
+## 📸 UI Preview 
 
-> *(Insert images or links to screenshots here showing the dashboard, calendar modal, sidebar, etc.)*
+### Dashboard View
+![Dashboard Screenshot](./assets/images/Main_Dash.png)
 
----
+### Tasks Modal
+![Tasks Modal Screenshot](./assets/images/Tasks.PNG)
+
+### Task Creation Modal
+![Tasks Creation Modal Screenshot](./assets/images/Task_creation.PNG)
+
+### Task Created Modal
+![Task Created Modal Screenshot](./assets/images/Task_created.PNG)
 
 ## 🧾 License
 
