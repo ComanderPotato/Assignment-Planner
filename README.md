@@ -124,7 +124,3 @@ Originally considered **Windows Forms**, but Blazor was selected due to:
 ## 🧾 License
 
 This project was built for educational purposes as part of **Assessment Task 2** and is not currently licensed for commercial use.
-
----
-
-Let me know if you want to include **setup instructions**, **screenshots**, or a **demo link** — I can update the README accordingly.
